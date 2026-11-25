@@ -55,22 +55,22 @@ function drawCobblestoneTile(
   x: number,
   y: number
 ) {
-  // Base earthy stone slab
-  ctx.fillStyle = (x + y) % 2 === 0 ? '#18202c' : '#141c26';
+  // Base cool slate dungeon flagstone floor
+  ctx.fillStyle = (x + y) % 2 === 0 ? '#0f1724' : '#0c131e';
   ctx.fillRect(tx, ty, size, size);
 
-  // Cobblestone mortar grooves
-  ctx.strokeStyle = '#0d131a';
+  // Mortar grooves between floor pavers
+  ctx.strokeStyle = '#060a10';
   ctx.lineWidth = 1;
   ctx.strokeRect(tx + 0.5, ty + 0.5, size - 1, size - 1);
 
-  // Individual cobblestones inside tile
+  // Individual flagstones inside walkable tile
   const half = size / 2;
   const stones = [
-    { ox: 2, oy: 2, w: half - 3, h: half - 3, c: '#233040' },
-    { ox: half + 1, oy: 2, w: half - 3, h: half - 4, c: '#1f2b3a' },
-    { ox: 3, oy: half + 1, w: half - 4, h: half - 3, c: '#1c2633' },
-    { ox: half, oy: half, w: half - 2, h: half - 2, c: '#253344' },
+    { ox: 2, oy: 2, w: half - 3, h: half - 3, c: '#162232' },
+    { ox: half + 1, oy: 2, w: half - 3, h: half - 4, c: '#131e2c' },
+    { ox: 3, oy: half + 1, w: half - 4, h: half - 3, c: '#111a26' },
+    { ox: half, oy: half, w: half - 2, h: half - 2, c: '#182536' },
   ];
 
   for (const s of stones) {
@@ -78,16 +78,20 @@ function drawCobblestoneTile(
     ctx.fillRect(tx + s.ox, ty + s.oy, s.w, s.h);
 
     // Stone top highlight
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
     ctx.fillRect(tx + s.ox, ty + s.oy, s.w, 1);
   }
+
+  // Subtle floor grid dot in center for clear tactical navigation
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+  ctx.fillRect(tx + half - 1, ty + half - 1, 2, 2);
 
   // Occasional moss/rubble fleck based on coordinate hash
   if ((x * 7 + y * 13) % 5 === 0) {
     ctx.fillStyle = '#15803d'; // moss
     ctx.fillRect(tx + 4, ty + size - 5, 3, 2);
   } else if ((x * 11 + y * 5) % 7 === 0) {
-    ctx.fillStyle = '#475569'; // pebble
+    ctx.fillStyle = '#334155'; // small pebble
     ctx.fillRect(tx + size - 6, ty + 5, 2, 2);
   }
 }
@@ -100,50 +104,81 @@ function drawWallBlock(
   hasTorch: boolean,
   pulseTime: number
 ) {
-  // Drop shadow cast onto ground
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-  ctx.fillRect(tx + 2, ty + size - 2, size - 4, 3);
+  // 1. Prominent drop shadow cast onto floor to emphasize elevation
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+  ctx.fillRect(tx + 2, ty + size - 2, size - 2, 4);
+  ctx.fillRect(tx + size - 2, ty + 4, 3, size - 4);
 
-  // Wall front face (dark brick masonry)
-  ctx.fillStyle = '#1e293b';
+  // 2. Outer dark border of the fortified masonry
+  ctx.fillStyle = '#1c0c06';
   ctx.fillRect(tx + 1, ty + 1, size - 2, size - 2);
 
-  // Stone block mortar lines
-  ctx.strokeStyle = '#0f172a';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(tx + 1.5, ty + 1.5, size - 3, size - 3);
+  // 3. Wall front face (warm castle terracotta & iron-brick masonry)
+  ctx.fillStyle = '#421f14';
+  ctx.fillRect(tx + 2, ty + 3, size - 4, size - 5);
 
-  // Horizontal brick divide
-  const midY = ty + size / 2;
+  // 4. Horizontal brick courses & mortar
+  ctx.strokeStyle = '#220e07';
+  ctx.lineWidth = 1;
+  const midY = ty + size * 0.58;
   ctx.beginPath();
   ctx.moveTo(tx + 2, midY);
   ctx.lineTo(tx + size - 2, midY);
   ctx.stroke();
 
-  // Brick vertical seams
+  // Vertical brick joints
   ctx.beginPath();
-  ctx.moveTo(tx + size * 0.4, ty + 2);
-  ctx.lineTo(tx + size * 0.4, midY);
-  ctx.moveTo(tx + size * 0.65, midY);
-  ctx.lineTo(tx + size * 0.65, ty + size - 2);
+  ctx.moveTo(tx + size * 0.45, ty + size * 0.32);
+  ctx.lineTo(tx + size * 0.45, midY);
+  ctx.moveTo(tx + size * 0.68, midY);
+  ctx.lineTo(tx + size * 0.68, ty + size - 2);
   ctx.stroke();
 
-  // Stone top cap bevel (top highlight)
-  ctx.fillStyle = '#334155';
-  ctx.fillRect(tx + 2, ty + 2, size - 4, 4);
-  ctx.fillStyle = '#475569';
-  ctx.fillRect(tx + 3, ty + 2, size - 6, 1.5);
+  // Individual brick texture highlights (warm earthen bricks)
+  ctx.fillStyle = '#56281a';
+  ctx.fillRect(tx + 3, ty + size * 0.34, size * 0.4 - 2, midY - ty - size * 0.34 - 1);
+  ctx.fillStyle = '#4e2417';
+  ctx.fillRect(tx + size * 0.47, ty + size * 0.34, size * 0.5 - 2, midY - ty - size * 0.34 - 1);
+  ctx.fillStyle = '#5c2d1e';
+  ctx.fillRect(tx + 3, midY + 1, size * 0.64 - 2, size - (midY - ty) - 4);
 
-  // Wall Torch with animated flickering flame
+  // 5. 2.5D Raised Parapet / Rampart Cap (Top 32% of block)
+  // Base cap block
+  ctx.fillStyle = '#6c2918';
+  ctx.fillRect(tx + 2, ty + 2, size - 4, size * 0.3);
+
+  // Upper illuminated stone slab
+  ctx.fillStyle = '#8a341f';
+  ctx.fillRect(tx + 2, ty + 2, size - 4, size * 0.2);
+
+  // Bright warm amber / bronze rim highlight along top edge
+  ctx.fillStyle = '#c2410c';
+  ctx.fillRect(tx + 2, ty + 2, size - 4, 1.5);
+  ctx.fillStyle = '#ea580c';
+  ctx.fillRect(tx + 3, ty + 2, size - 6, 1);
+
+  // Front bevel of the raised parapet (gives true 3D depth)
+  ctx.fillStyle = '#2d1109';
+  ctx.fillRect(tx + 2, ty + size * 0.31, size - 4, 1.5);
+
+  // Reinforced iron studs / corner rivets
+  ctx.fillStyle = '#9a3412';
+  ctx.fillRect(tx + 4, ty + size - 5, 2, 2);
+  ctx.fillRect(tx + size - 6, ty + size - 5, 2, 2);
+  ctx.fillStyle = '#fdba74';
+  ctx.fillRect(tx + 4, ty + size - 5, 1, 1);
+  ctx.fillRect(tx + size - 6, ty + size - 5, 1, 1);
+
+  // 6. Wall Torch with animated flickering flame
   if (hasTorch) {
     const torchX = tx + size / 2;
-    const torchY = ty + size * 0.45;
+    const torchY = ty + size * 0.5;
 
-    // Torch wooden bracket
-    ctx.fillStyle = '#78350f';
+    // Torch iron bracket
+    ctx.fillStyle = '#1c0c06';
     ctx.fillRect(torchX - 1.5, torchY, 3, 6);
-    ctx.fillStyle = '#92400e';
-    ctx.fillRect(torchX - 3, torchY + 1, 6, 2);
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(torchX - 2.5, torchY + 1, 5, 2);
 
     // Warm ambient light glow radius
     const flicker = Math.sin(pulseTime * 9) * 2;
@@ -153,14 +188,14 @@ function drawWallBlock(
       1,
       torchX,
       torchY - 3,
-      size * 0.85 + flicker
+      size * 0.9 + flicker
     );
-    torchGlow.addColorStop(0, 'rgba(251, 146, 60, 0.35)');
-    torchGlow.addColorStop(0.5, 'rgba(245, 158, 11, 0.12)');
+    torchGlow.addColorStop(0, 'rgba(251, 146, 60, 0.45)');
+    torchGlow.addColorStop(0.5, 'rgba(245, 158, 11, 0.18)');
     torchGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = torchGlow;
     ctx.beginPath();
-    ctx.arc(torchX, torchY - 3, size * 0.85 + flicker, 0, Math.PI * 2);
+    ctx.arc(torchX, torchY - 3, size * 0.9 + flicker, 0, Math.PI * 2);
     ctx.fill();
 
     // Fire flame core
@@ -183,11 +218,11 @@ function drawHideoutCave(
   size: number
 ) {
   // Shaded alcove ground
-  ctx.fillStyle = '#0b1017';
+  ctx.fillStyle = '#060a10';
   ctx.fillRect(tx + 1, ty + 1, size - 2, size - 2);
 
-  // Cavern rock archway
-  ctx.fillStyle = '#1e293b';
+  // Cavern rock archway (ancient mossy granite)
+  ctx.fillStyle = '#263342';
   ctx.beginPath();
   ctx.arc(tx + size / 2, ty + size / 2 + 3, size / 2.3, Math.PI, 0, false);
   ctx.lineTo(tx + size - 3, ty + size - 2);
@@ -195,8 +230,8 @@ function drawHideoutCave(
   ctx.closePath();
   ctx.fill();
 
-  // Dark cavern interior opening
-  ctx.fillStyle = '#05070a';
+  // Dark cavern interior opening (stealth void)
+  ctx.fillStyle = '#020408';
   ctx.beginPath();
   ctx.arc(tx + size / 2, ty + size / 2 + 5, size / 3.4, Math.PI, 0, false);
   ctx.lineTo(tx + size - 6, ty + size - 2);
@@ -204,8 +239,8 @@ function drawHideoutCave(
   ctx.closePath();
   ctx.fill();
 
-  // Stone keystones along arch
-  ctx.fillStyle = '#334155';
+  // Stone keystones along arch with moss highlights
+  ctx.fillStyle = '#475569';
   ctx.fillRect(tx + size / 2 - 2, ty + 3, 4, 3);
   ctx.fillRect(tx + 6, ty + 8, 3, 3);
   ctx.fillRect(tx + size - 9, ty + 8, 3, 3);
@@ -217,9 +252,9 @@ function drawHideoutCave(
   ctx.fillStyle = '#059669';
   ctx.fillRect(tx + 10, ty + 11, 2, 3);
 
-  // Cyan stealth mist shimmer
-  ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
-  ctx.fillRect(tx + 8, ty + size - 6, size - 16, 3);
+  // Cyan stealth mist shimmer (signals safe hiding spot)
+  ctx.fillStyle = 'rgba(6, 182, 212, 0.35)';
+  ctx.fillRect(tx + 6, ty + size - 6, size - 12, 3);
 }
 
 function drawFoodRationChest(
@@ -605,7 +640,7 @@ export const Game = () => {
   const [initData, setInitData] = useState<InitDataResponse | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [activeModal, setActiveModal] = useState<
-    'gambit_select' | 'debrief' | 'leaderboard' | 'drop_beacon' | null
+    'gambit_select' | 'debrief' | 'leaderboard' | 'drop_beacon' | 'how_to_play' | null
   >('gambit_select');
   const [activeAbility, setActiveAbility] = useState<
     'vault' | 'knife' | 'repulsor' | null
@@ -1270,6 +1305,20 @@ ${gridVisual}`;
     }
   };
 
+  const handleRetryRun = useCallback(() => {
+    if (!initData) return;
+    const state = initializeGameState(initData.todayMap, null, initData.directive);
+    setGameState(state);
+    setActiveModal(null);
+    setActiveAbility(null);
+    setShowGhost(false);
+    setGhostStepIndex(0);
+    setDecoyPlaced(false);
+    setRecapPosted(false);
+    hasSubmittedRef.current = false;
+    showToast('Sector restarted! Keep your eye on hunter red arrows.');
+  }, [initData, showToast]);
+
   if (!gameState) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-[#080c11] text-amber-400 font-mono">
@@ -1702,6 +1751,30 @@ ${gridVisual}`;
               </div>
             </div>
 
+            {/* TACTICAL SURVIVAL TIP ON DEFEAT */}
+            {gameState.status !== 'extracted' && (
+              <div className="p-2.5 rounded-lg bg-red-950/40 border border-red-500/40 text-xs font-mono space-y-1">
+                <div className="flex items-center justify-between text-amber-300 font-bold text-[11px]">
+                  <span>💡 SURVIVAL TIP // HOW NOT TO DIE:</span>
+                  <button
+                    onClick={() => setActiveModal('how_to_play')}
+                    className="text-[10px] text-amber-400 underline hover:text-amber-200 cursor-pointer"
+                  >
+                    View Manual
+                  </button>
+                </div>
+                {gameState.status === 'starved' ? (
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    You ran out of stamina. Every step costs <strong className="text-amber-400">1⚡</strong>. Collect the golden supply chests <strong className="text-amber-400">🍞</strong> along your path for <strong className="text-emerald-400">+4⚡ Stamina</strong>! Avoid backtracking and head straight towards the green portal.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    Ambushed by a Hunter! Watch the <strong className="text-red-400">Red Cones</strong> (their sightlines) and the <strong className="text-red-400">Red Arrows</strong> (their next step). Use <strong className="text-purple-400">[💨 BLAST]</strong> to stun them, <strong className="text-amber-400">[⚡ VAULT]</strong> to leap away, or hide inside <strong className="text-cyan-400">Caverns</strong>!
+                  </p>
+                )}
+              </div>
+            )}
+
             {gameState.status === 'extracted' && !decoyPlaced && (
               <div className="p-2 rounded bg-slate-950/80 border border-slate-800 text-xs font-mono">
                 <span className="text-[10px] text-amber-400 font-bold block mb-1">
@@ -1744,6 +1817,16 @@ ${gridVisual}`;
             )}
 
             <div className="flex flex-col gap-2 pt-1">
+              {/* RETRY BUTTON WHEN FALLEN */}
+              {gameState.status !== 'extracted' && (
+                <button
+                  onClick={handleRetryRun}
+                  className="w-full py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-mono font-bold text-xs uppercase tracking-wider cursor-pointer shadow-lg flex items-center justify-center gap-1.5"
+                >
+                  <span>🔄</span>
+                  <span>REDEPLOY OPERATIVE // TRY AGAIN</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   void handlePostRecap();
@@ -1843,6 +1926,106 @@ ${gridVisual}`;
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: HOW TO PLAY / FIELD MANUAL */}
+      {activeModal === 'how_to_play' && (
+        <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-3">
+          <div className="w-full max-w-sm bg-slate-900 border border-amber-500/60 rounded-xl p-4 shadow-2xl flex flex-col gap-3 max-h-[88vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🧭</span>
+                <div>
+                  <h3 className="font-mono font-black text-sm text-amber-400">
+                    SAVIOR FIELD MANUAL
+                  </h3>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    Tactical Survival Guide
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveModal(null)}
+                className="text-xs font-mono text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 cursor-pointer"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* Step-by-Step Goal */}
+            <div className="space-y-2 text-xs font-mono">
+              <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+                <span className="text-[11px] font-bold text-emerald-400 block mb-1">
+                  🎯 MISSION GOAL (HOW TO WIN)
+                </span>
+                <ol className="list-decimal list-inside space-y-1 text-slate-300 text-[11px] leading-relaxed">
+                  <li>
+                    Start at bottom-left <strong className="text-blue-400">(🟦 Operative)</strong>.
+                  </li>
+                  <li>
+                    Collect at least <strong className="text-amber-400">1 Golden Supply Chest 🍞</strong>. The exit gate is locked until you have food!
+                  </li>
+                  <li>
+                    Reach the <strong className="text-emerald-400">Green Portal 🟩</strong> at top-right before Stamina drops to 0.
+                  </li>
+                </ol>
+              </div>
+
+              {/* Survival rules */}
+              <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+                <span className="text-[11px] font-bold text-red-400 block mb-1">
+                  💀 HOW NOT TO DIE
+                </span>
+                <ul className="space-y-1.5 text-slate-300 text-[11px] leading-relaxed">
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-amber-400 font-bold shrink-0">⚡ 25 STAMINA:</span>
+                    <span>Every step costs 1⚡. Grab chests 🍞 for +4⚡ so you don&apos;t starve!</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-red-400 font-bold shrink-0">🔴 RED CONES:</span>
+                    <span>Hunter vision cones. Walking in front of a Hunter triggers an alert!</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-red-400 font-bold shrink-0">➡️ RED ARROWS:</span>
+                    <span>Shows where the Hunter will step NEXT turn. Never walk onto that tile!</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Abilities */}
+              <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+                <span className="text-[11px] font-bold text-cyan-400 block mb-1">
+                  🎒 TACTICAL LOADOUT (BOTTOM BUTTONS)
+                </span>
+                <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                  <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
+                    <strong className="text-amber-300 block">⚡ VAULT (Jump)</strong>
+                    <span className="text-slate-400">Leap 2 tiles over walls, traps, or hunters.</span>
+                  </div>
+                  <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
+                    <strong className="text-purple-300 block">💨 BLAST (Stun)</strong>
+                    <span className="text-slate-400">Knocks hunter 3 tiles back &amp; stuns for 2 turns!</span>
+                  </div>
+                  <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
+                    <strong className="text-red-300 block">🗡️ BLADE (Ambush)</strong>
+                    <span className="text-slate-400">Eliminate adjacent hunter from behind or cave (+1,200 pts).</span>
+                  </div>
+                  <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
+                    <strong className="text-emerald-300 block">🕳️ CAVERN (Hide)</strong>
+                    <span className="text-slate-400">Step into caves to become invisible for 2 turns!</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveModal(null)}
+              className="w-full py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono font-bold text-xs uppercase tracking-wider cursor-pointer shadow"
+            >
+              UNDERSTOOD // RESUME MISSION
+            </button>
           </div>
         </div>
       )}
